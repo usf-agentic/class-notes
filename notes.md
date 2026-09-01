@@ -1,3 +1,2 @@
-# Notes
+# Multi-Agent Systems
 
-This is a note.
