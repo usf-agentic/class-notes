@@ -29,7 +29,7 @@ Learns/has a policy(π)
 
 $π: (s, a)$ → expected return
 
-> [!NOTE]
+> [!TIP]
 > **On Expected Return:**
 > Can think of it as a return on investment
 
@@ -114,10 +114,20 @@ Find the fastest program that passes all tests
 
 ### Tool Use
 
-LLMs can only predict/generate text.
+LLMs can only predict/generate text. Tools add the capabilty to interact with the outside world.
 
 <img src="./img/LLM-Harness-World.excalidraw.png" alt="Agent and harness diagram" width="50%">
 
-> [!NOTE] 
+> [!TIP] 
 > **Harness:**
 > You can think of the harness as Agent - LLM
+
+- It is possible for an LLM to hallucinate tools. We should have some failsafes
+  so that the program doesn't crash.
+- Tools need to be written with a resilient intereface. Tools can potentially
+  run arbitrary code.
+- A model may invoke several tool calls in a round.
+
+**Use tools when you need:**
+- to interact with the outside world.
+- to do reliable computation that would be too unreliable/expensive for models.
