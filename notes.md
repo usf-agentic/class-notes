@@ -116,7 +116,7 @@ Find the fastest program that passes all tests
 
 LLMs can only predict/generate text.
 
-![stuff](./img/LLM-Harness-World.excalidraw.png){ width=50% }
+<img src="./img/LLM-Harness-World.excalidraw.png" alt="Agent and harness diagram" width="50%">
 
 > [!NOTE] 
 > **Harness:**
