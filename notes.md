@@ -29,10 +29,12 @@ Learns/has a policy(π)
 
 $π: (s, a)$ → expected return
 
-> [!NOTE] On Expected Return
+> [!NOTE]
+> On Expected Return
 > Can think of it as a return on investment
 
-> [!NOTE] On LLMs 
+> [!NOTE] 
+> On LLMs 
 > context is the state, actions is predicting next token, the
 > new state is context + (previous prediction)
 
@@ -116,5 +118,6 @@ LLMs can only predict/generate text.
 
 ![stuff](./img/LLM-Harness-World.excalidraw.png)
 
-> [!NOTE] Harness
+> [!NOTE] 
+> Harness
 > You can think of the harness as Agent - LLM
