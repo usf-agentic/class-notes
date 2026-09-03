@@ -131,3 +131,14 @@ LLMs can only predict/generate text. Tools add the capabilty to interact with th
 **Use tools when you need:**
 - to interact with the outside world.
 - to do reliable computation that would be too unreliable/expensive for models.
+
+## Lecture 4: Sept 3
+
+### Recap: Tool Use
+
+<img src="./img/agents-l3-tool-recap.excalidraw.png" alt="Agent and harness recap diagram" width="50%">
+  
+
+### Tool Use Exercise
+
+### RAG & MCP
