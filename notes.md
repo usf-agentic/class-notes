@@ -138,7 +138,29 @@ LLMs can only predict/generate text. Tools add the capabilty to interact with th
 
 <img src="./img/agents-l3-tool-recap.excalidraw.png" alt="Agent and harness recap diagram" width="50%">
   
+### RAG (Retrieval-Augmented Generation)
 
-### Tool Use Exercise
+- The model's knowledge is frozen at training time.
+- For large frequently changing knowledge bases, you cannot put everything in
+  the context window. Both data and query may not fit.
+- RAG fetches the relevant slice of knowledge at query time and injects it into
+  the prompt
 
-### RAG & MCP
+<img src="./img/agents-l3-rag.excalidraw.png" alt="RAG diagram" width="50%">
+
+- Once classic way of doing this is to use vector databases. You can have your query and the document and their respective vectors.
+If the vectors are aligned well enough, then that document is considered relevant to the query.
+Now the LLM has relevant data. 
+
+#### Chunking
+
+If we have to summarize a large document:
+- we take a few chunks for the document, they may or may not be overlapping.
+- Each chunk has its own embedding.
+
+> [!TIP] 
+> Why overlap? 
+> We might be chunking randomly. We do not know if a
+> sentence is relevant to data before it or after it.
+> Overlapping increases the chance of having relevant be 
+> present in the same chunk.
