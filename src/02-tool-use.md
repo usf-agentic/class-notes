@@ -164,7 +164,7 @@ If we have to summarize a large document:
 > Why overlap? 
 > We might be chunking randomly. We do not know if a
 > sentence is relevant to data before it or after it.
-> Overlapping increases the chance of having relevant be 
+> Overlapping increases the chance of having relevant data
 > present in the same chunk.
 
 ### MCP
