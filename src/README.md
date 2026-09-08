@@ -24,10 +24,10 @@ Wants to get mac reward(r) (this is immediate feedback from the env for taking t
 
 Learns/has a policy(π)
 - Strategy for attaining max r
-- Polict determines value $v$: the expected benefit of the action.
+- Policy determines value \\(v\\): the expected benefit of the action.
 - both immediate and long-term
 
-$π: (s, a)$ → expected return
+\\(π: (s, a)\\) → expected return
 
 > [!TIP]
 > **On Expected Return:**
@@ -60,13 +60,13 @@ The system itself can be either stochastic or deterministic.
 
 - Immediate outcome of an action.
 - Could be positive or negative
-- We define these values based on the outocme.
+- We define these values based on the outcome.
 
 There are some issues in reward design:
 - Can create perverse incentives.
 - Sparse rewards are harder to incentivize.
-- Artificial rewars can change training outcome. You might want artificial
-  rewards when the bulk of rewards come towards the end. this is because it is
+- Artificial reward can change training outcome. You might want artificial
+  rewards when the bulk of rewards come towards the end. This is because it is
   difficult to propagate back the reward through a long sequence.
 
 Example: coding agents
@@ -114,7 +114,7 @@ Find the fastest program that passes all tests
 
 ### Tool Use
 
-LLMs can only predict/generate text. Tools add the capabilty to interact with the outside world.
+LLMs can only predict/generate text. Tools add the capability to interact with the outside world.
 
 <img src="./img/LLM-Harness-World.excalidraw.png" alt="Agent and harness diagram" width="50%">
 
@@ -122,9 +122,9 @@ LLMs can only predict/generate text. Tools add the capabilty to interact with th
 > **Harness:**
 > You can think of the harness as Agent - LLM
 
-- It is possible for an LLM to hallucinate tools. We should have some failsafes
+- It is possible for an LLM to hallucinate tools. We should have some fail safes
   so that the program doesn't crash.
-- Tools need to be written with a resilient intereface. Tools can potentially
+- Tools need to be written with a resilient interface. Tools can potentially
   run arbitrary code.
 - A model may invoke several tool calls in a round.
 
@@ -168,9 +168,9 @@ If we have to summarize a large document:
 ### MCP
 
 Open standard for connecting tools and data sources to LLMs in a
-provider-agnositc manner.
+provider-agnostic manner.
 
-responses API already does this, why MCP?
+Responses API already does this, why MCP?
 
 - a standard and discoverable interface.
 - Can add new tools/skills/etc. without changing agent code.

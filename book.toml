@@ -1,0 +1,9 @@
+[book]
+title = "Multi-Agent Systems"
+language = "en"
+src = "src"
+
+[output.html]
+admonitions = true
+mathjax-support = true
+git-repository-url = "https://github.com/usf-agentic/class-notes"
