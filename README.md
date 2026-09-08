@@ -140,5 +140,5 @@ Before submitting notes again, return to the fork-sync instructions above.
 ## Copyright and license
 
 **Lecture notes' copyright is owned by the student writing them**, but they
-give the USF and the instructional stuff the right to publish them on the
-course website.
+give University of San Francisco and the instructional staff a non-exclusive
+right to publish the notes and to edit them.
