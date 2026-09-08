@@ -164,3 +164,14 @@ If we have to summarize a large document:
 > sentence is relevant to data before it or after it.
 > Overlapping increases the chance of having relevant be 
 > present in the same chunk.
+
+### MCP
+
+Open standard for connecting tools and data sources to LLMs in a
+provider-agnositc manner.
+
+responses API already does this, why MCP?
+
+- a standard and discoverable interface.
+- Can add new tools/skills/etc. without changing agent code.
+- Agnostic over transport.
