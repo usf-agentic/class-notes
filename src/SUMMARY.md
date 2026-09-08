@@ -1,3 +1,3 @@
 # Summary
 
-- [Multi-Agent Systems](README.md)
+- [Multi-Agent Systems](02-intro.md)
