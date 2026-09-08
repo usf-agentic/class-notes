@@ -1,4 +1,6 @@
-# Multi-Agent Systems
+# Week 2: Reinforcement Learning and Tool Use
+
+**Note taker: Ravneet Singh Bhatia**
 
 ## Lecture 3: Sept 1
 

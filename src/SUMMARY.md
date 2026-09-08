@@ -1,3 +1,4 @@
 # Summary
 
-- [Multi-Agent Systems](02-intro.md)
+- [Front matter](index.md)
+- [Week 2](02-tool-use.md)
