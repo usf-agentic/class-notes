@@ -2,7 +2,7 @@
 
 **Note taker: Ravneet Singh Bhatia**
 
-## Lecture 4: Sept 8
+## Lecture 5: Sept 8
 
 ### Test-time compute
 
@@ -83,7 +83,7 @@ The formula becomes:
 When we want high reasoning we maximize `response / tokens`
 When we want fast inference we maximize `tokens / second`
 
-## Lecture 5: Sept 10
+## Lecture 6: Sept 10
 
 **Note taker: Andreas Jack Christiansen**
 
