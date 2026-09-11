@@ -1,6 +1,6 @@
 [book]
 title = "Multi-Agent Systems"
-authors = ["Mehmet Emre", "Ravneet Singh Bhatia"]
+authors = ["Mehmet Emre", "Ravneet Singh Bhatia", "Andreas Jack Christiansen"]
 language = "en"
 
 [preprocessor]
