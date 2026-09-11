@@ -102,6 +102,7 @@ Next week: Strands (the agent library for the rest of the course), ReAct
 
 > [!NOTE]
 > **Quiz:** difference between reasoning in reasoning models and CoT prompting?
+>
 > CoT is a prompting technique, it does not train the model. Reasoning models
 > are trained with RL to produce the reasoning themselves.
 
