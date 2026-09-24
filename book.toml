@@ -1,6 +1,6 @@
 [book]
 title = "Multi-Agent Systems"
-authors = ["Mehmet Emre", "Ravneet Singh Bhatia", "Andreas Jack Christiansen", "Srikar Devesetti"]
+authors = ["Mehmet Emre", "Ravneet Singh Bhatia", "Andreas Jack Christiansen", "Srikar Devesetti", "Ayeman Fouad"]
 language = "en"
 
 [preprocessor]
@@ -13,7 +13,6 @@ language = "en"
 command = "mdbook-graphviz"
 
 [output]
-
 [output.html]
 mathjax-support = true
 admonitions = true
