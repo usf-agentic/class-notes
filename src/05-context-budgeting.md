@@ -1,8 +1,8 @@
-# Week 5: Context Budgeting
-
-**Note taker: Ayeman Fouad**
+# Week 5: Context Budgeting, Long-term Memory, and Subagents
 
 ## Lecture: Sept 22
+
+**Note taker: Ayeman Fouad**
 
 # Topics this week
 
@@ -152,3 +152,332 @@ Auto is the recommended default. The catch with the agentic version is that you'
 - **Keep references to the original source.** If a summary turns out to be missing something, the agent should be able to go re-fetch the full detail rather than hallucinate it.
 - **Test and benchmark it.** The only question that matters: *after compression, can the agent still take the next step (or series of steps) correctly?* Evaluate that, don't assume it.
 
+
+## Lecture: Sept 24
+
+**Note taker: Jonathan Samuel Jayaseelan**
+
+### Topics
+
+- Long-term memory: extract and recall, agentic retrieval, maximal marginal relevance
+- Kinds of memory and where to store them
+- Demo: Mnemosyne, a tutor with memory, sessions, and a reader subagent
+- Subagents and Strands' `use_agent`
+- Coordination patterns: routing, parallel workers, pipelines
+- Evaluating a multi-agent system
+
+Slides: [Memory demo](https://www.cs.usfca.edu/~memre/agents/slides/06.1-memory-demo.pdf), [Subagents](https://www.cs.usfca.edu/~memre/agents/slides/07-subagents.pdf)
+
+### Long-term memory
+
+An agent forgets everything when it shuts down. Long-term memory keeps facts about a task or user across runs.
+
+| | Short-term memory | Long-term memory |
+|---|---|---|
+| What it is | The context window | A store outside the model (files, a database) |
+| What's in it | Queries, responses, tool calls, tool results | Facts and preferences worth keeping |
+| Lifetime | One session | Across sessions |
+
+Two operations connect them:
+
+<pre class="mermaid">
+flowchart LR
+    STM["Short-term memory (context)"] -- extract --> LTM[("Long-term memory")]
+    LTM -- "recall relevant info" --> STM
+</pre>
+
+Recall is RAG. The difference is the source: RAG indexes a corpus built ahead of time (a codebase, financial records), while memory is built from past conversations. So memory also needs an extract step. Coding agents already do this with memory files: tell it "run these benchmarks whenever you optimize," and it saves that and reads it back the next time it optimizes in that project.
+
+#### Agentic retrieval
+
+Classic RAG retrieves once, up front, using the user's prompt as the query. An agent instead gets retrieval as a **tool** (like the weather tool from the assignment), so it can query mid-task whenever it decides it needs something. For memory, it can also get an `add_memory` tool.
+
+<pre class="mermaid">
+flowchart LR
+    subgraph Classic RAG
+        Q1["User prompt"] --> DB1[("Database")]
+        DB1 -- "relevant results" --> M1["Model"]
+        Q1 --> M1
+    end
+    subgraph Agentic retrieval
+        Q2["User prompt"] --> A2["Agent"]
+        A2 -- "search tool call<br/>(any time, any query)" --> DB2[("Database")]
+        DB2 -- results --> A2
+        A2 -. "add_memory (optional)" .-> DB2
+    end
+</pre>
+
+The backing store can be anything: a vector database, a customer DB, Elasticsearch, a keyword index, or an LSP server.
+
+#### Maximal marginal relevance
+
+Top results often overlap. Searching a codebase for `create_window` might return `window.h` (relevance 0.40), `window.c` (0.20), and another file (0.15). The header and implementation say mostly the same thing, so including both wastes tokens.
+
+MMR picks documents by *marginal* relevance:
+
+1. Pick the most relevant document.
+2. Re-score the rest by relevance to the query minus similarity to what's already picked.
+3. Pick the best, repeat.
+
+Similarity is the cosine similarity (dot product of normalized embeddings) from whatever embedding model the vector DB uses. If `window.h` and `window.c` have similarity 0.8 and the cutoff is 0.7, `window.c` is skipped and the next file takes its slot. The result is a small, diverse set.
+
+#### What to remember
+
+| Kind | Holds | Example |
+|---|---|---|
+| Episodic | Experience: what worked | "This workflow went well on this kind of task" |
+| Semantic | Facts | "This only works on x86." "Code here is styled this way." |
+| Procedural | Standing directives | "Whenever you do rendering optimizations, run these benchmarks." |
+
+Users don't have to phrase these as commands. Saying "I prefer raw strings over ugly line continuations" while reviewing code was enough for the coding agent to save it. Agents do *not* reliably save lessons from their own struggles; that's an open problem that products like mem0 and Supermemory target.
+
+#### Writing and storing memories
+
+| | Listener LLM | `add_memory` tool |
+|---|---|---|
+| Who decides to save | A second, smaller model reading the conversation after each turn | The main agent |
+| How you steer it | The listener's prompt | The tool description |
+
+| Storage | Retrieval | Notes |
+|---|---|---|
+| Text / JSON files | You write it (often keyword matching) | Strands' default file store |
+| SQLite / relational DB | SQL | Easy to inspect |
+| Vector database | Built-in similarity search | Used in the demo |
+| Hosted service | Handled for you | mem0, Supermemory, AWS Bedrock |
+
+### Demo: Mnemosyne, a tutor that remembers
+
+A tutor that remembers a student's learning preferences. Tools: Wikipedia search/fetch and symbolic math.
+
+```python
+Agent(
+    model=create_model(api_key, TUTOR_MODEL),
+    system_prompt=SYSTEM_PROMPT,
+    tools=[search_wikipedia,
+           wikipedia_fetch_tool(small_model, events),
+           symbolic_math],
+    memory_manager=memory,             # build/retrieve memories
+    session_manager=session_manager,   # restore sessions
+    hooks=[events],
+    callback_handler=None,
+)
+```
+
+A large model runs the tutor. A small model extracts memories and summarizes Wikipedia articles to keep the main context clean.
+
+#### Memory modes
+
+| Setting | `--mode auto` | `--mode tool` |
+|---|---|---|
+| Who decides to write | Extractor after each turn | Tutor calls `add_memory` |
+| Automatic extraction | On | Off |
+| `add_memory` tool | Off | On |
+| Automatic retrieval | Up to 5 entries | Up to 5 entries |
+| `search_memory` tool | On | On |
+
+```python
+# --mode auto: small model extracts after every turn
+extraction = ExtractionConfig(
+    trigger=InvocationTrigger(),                         # run after each user query
+    extractor=ObservedExtractor(extraction_model, events),  # ModelExtractor + console logging
+)
+store = TutorMemoryStore(db, events, extraction=extraction)
+allow_memory_tool = False
+
+# --mode tool: the tutor decides
+store = TutorMemoryStore(db, events)
+allow_memory_tool = True
+```
+
+Retrieved memories are formatted as pseudo-XML and prepended to the user's query by a hook.
+
+#### Custom memory store
+
+`TutorMemoryStore` implements Strands' `MemoryStore` interface:
+
+```python
+async def search(self, query, options=None): ...
+async def add(self, content, metadata=None): ...
+```
+
+- **LanceDB** stores rows of (timestamp, id, content, embedding) and does cosine-similarity search.
+- **Sentence Transformers** computes embeddings on the CPU.
+- `add` embeds and inserts; `search` embeds the query and returns the top matches.
+
+About 100 lines total, and it runs offline. In production you'd use Bedrock, Supermemory, or Postgres with a vector extension.
+
+#### Sessions
+
+| | Memory | Sessions |
+|---|---|---|
+| Saves | Extracted facts | The whole conversation |
+| Used for | Recall across sessions | Resuming one conversation |
+| In the demo | `TutorMemoryStore` | `SnapshotSessionManager` |
+
+```python
+from strands.session import SnapshotSessionManager
+from strands.storage import LocalFileStorage
+
+SnapshotSessionManager(
+    session_id=session,
+    storage=LocalFileStorage(str(sessions_dir / mode)),
+)
+```
+
+The library saves the conversation after each round.
+
+#### Subagent inside a tool: `fetch_wikipedia`
+
+The fetch tool sends the question and up to 24,000 characters of the article to a throwaway reader agent, and returns only its findings:
+
+```python
+reader = Agent(model=model, system_prompt=ARTICLE_PROMPT,
+               callback_handler=None)
+result = await reader.invoke_async(article_question)
+```
+
+<pre class="mermaid">
+sequenceDiagram
+    participant T as Tutor
+    participant F as fetch_wikipedia tool
+    participant W as Wikipedia API
+    participant R as Reader subagent (small model)
+    T->>F: fetch_wikipedia(title, question)
+    F->>W: download article
+    W-->>F: full article text
+    F->>R: question + up to 24,000 chars
+    R-->>F: relevant findings
+    Note over R: reader is discarded
+    F-->>T: findings only (short)
+</pre>
+
+#### What happened in the demo
+
+| Step | Result |
+|---|---|
+| Session 1, auto mode | No memories yet. Asked about natural logarithms; tutor used the reader subagent and symbolic math. |
+| After that turn | Extractor saved one preference: the user likes characters and stories (from "I have a hard time remembering things"). Tutor started bringing up Napier, Briggs, Mercator, Euler. |
+| Session 2, fresh | "Who invented algebra?" The preference was recalled and the answer was told as a story. |
+| Quiet turns | Nothing worth remembering, nothing saved. |
+| Resume | `/memories` printed the store. Reconnecting to session 1 restored the full conversation. |
+
+### Subagents
+
+Two goals from the last two lectures: keep each agent **focused**, and keep irrelevant information **out of the context** (the "lost in the middle" curve). A subagent does both. It works on one task in a fresh context and returns only what matters. General idea: **agents as (part of) tools**.
+
+#### Coding-agent example
+
+<pre class="mermaid">
+flowchart LR
+    C["Coordinator"] -- "1. Tasks" --> R["Code / test research<br/>(fresh contexts)"]
+    R -- "2. Summaries" --> C
+    C -- "3. Summaries" --> I["Implementing agent<br/>(fresh context)"]
+    I -- "4. Patch" --> C
+</pre>
+
+The coordinator keeps the goal and combines results. Workers investigate in their own contexts, and their detailed histories stay with them. Aider tried per-role modes (architect, ask, code) early on, before models had enough RL training for it to work well.
+
+#### Make the task and return value concrete
+
+| Send | Return |
+|---|---|
+| Question: can the student take CS 486? | Eligible: yes or no |
+| Completed courses and current catalog | Prerequisites satisfied or missing |
+| Constraint: check prerequisites only | Catalog references for each claim |
+
+The coordinator needs the conclusion and evidence, not the search history.
+
+#### Context and tools are separate choices
+
+| Choice | Controls |
+|---|---|
+| Context | What the worker *knows* |
+| Tools | What the worker can *do* |
+
+A fresh context does not sandbox filesystem or network access. Giving each worker only relevant tools also helps because tool-trained models tend to call tools (web search, calculator) even when they don't need to.
+
+#### Strands `use_agent`
+
+- Starts a new agent **without** the parent's conversation history.
+- Uses the parent's model by default.
+- Omit `tools` → inherits all parent tools; `tools=[]` → no tools.
+- Returns response text, model info, and metrics.
+
+```python
+from strands import Agent
+from strands_tools import use_agent
+
+coordinator = Agent(model=model, tools=[use_agent])
+
+# note that the tool can create an agent with an arbitrary prompt!
+result = coordinator.tool.use_agent(
+    prompt="Given these prerequisites and completed courses: ...",
+    system_prompt=(
+        "Check prerequisite eligibility. Return the decision, "
+        "missing courses, and supporting catalog references."
+    ),
+    tools=[],
+)
+```
+
+#### Who controls the next step?
+
+| Who | How | Trade-off |
+|---|---|---|
+| Coordinator agent | Calls subagent tools as it sees fit (harness can limit `use_agent`) | Flexible; every decision is an LLM call |
+| Harness (your code) | Fixed dependencies, pipelines, graphs | Cheaper and predictable; needs the flow known ahead of time |
+
+If the flow can be fixed ahead of time, fix it. Skipping an LLM call is usually cheaper, and each step can use a smaller model.
+
+### Coordination patterns
+
+| Pattern | Use when | Example |
+|---|---|---|
+| Routing | Inputs fall into categories needing different prompts/tools | Support tickets |
+| Parallel workers | Work splits into independent pieces | Processing many documents |
+| Pipeline | Each step needs the previous output | Resume screening |
+
+<pre class="mermaid">
+flowchart LR
+    router -- billing --> billing
+    router -- tech --> tech
+    router -- other --> generalist
+</pre>
+
+Routing: give each specialist a focused prompt and its tools. Send uncertain cases to a generalist or ask for clarification.
+
+<pre class="mermaid">
+flowchart LR
+    supervisor --> A["worker A"] --> aggregator
+    supervisor --> B["worker B"] --> aggregator
+    supervisor --> C["worker C"] --> aggregator
+</pre>
+
+Parallel workers cut latency. Workers can share state through a common memory (swarms), which helps discovery-style tasks.
+
+<pre class="mermaid">
+flowchart LR
+    P["parse resume"] --> G["visit GitHub"] --> S["score resume"]
+</pre>
+
+Pipelines fix the order. The GitHub step summarizes a candidate's repos so that detail never enters the main context. (Real LLM-based resume screeners are noisy: one open-source one varied about 15/100 across runs on the same resume.)
+
+### Is the multi-agent system worth it?
+
+If one capable model gets the same result for the same cost, the complex system just adds maintenance. Measure both on the same tasks:
+
+| Measure | Include |
+|---|---|
+| Accuracy | Final answer checked against task requirements |
+| Tokens and cost | All coordinator and worker calls (summaries become the next agent's input) |
+| Latency | Time to complete answer (parallelism can lower it) |
+| Failure analysis | Wrong routing, missing evidence, conflicting results, facts lost in compression |
+
+Attributing failures in a non-deterministic multi-agent system is hard. More in the evaluation lecture (week 7).
+
+### Next week
+
+- A **graph** makes worker dependencies explicit and names their results.
+- A **gate** checks a proposed action in code before it runs, e.g. tests must pass before code review.
+- **Workflows** prescribe pipelines.
+- **Swarms** pass control dynamically between agents.
