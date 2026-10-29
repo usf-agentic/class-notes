@@ -6,4 +6,4 @@
 - [Week 4](04-reAct.md)
 - [Week 5](05-context-budgeting.md)
 - [Week 6](06-gating-agent-actions.md)
-
+- [Week 9](09-agent-security.md)
