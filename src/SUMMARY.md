@@ -8,3 +8,4 @@
 - [Week 6](06-gating-agent-actions.md)
 - [Week 9](09-agent-security.md)
 - [Week 10](10-robust-evaluation.md)
+- [Week 11](11.1-sandboxed-coding-agent.md)
